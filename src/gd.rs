@@ -1,15 +1,14 @@
-use log::LogLevel::Trace;
+use log::Level::Trace;
 
+use line_search::{ArmijoLineSearch, LineSearch};
 use types::{Function1, Minimizer, Solution};
-use line_search::{LineSearch, ArmijoLineSearch};
 use utils::is_saddle_point;
-
 
 /// A simple Gradient Descent optimizer.
 pub struct GradientDescent<T> {
     line_search: T,
     gradient_tolerance: f64,
-    max_iterations: Option<u64>
+    max_iterations: Option<u64>,
 }
 
 impl GradientDescent<ArmijoLineSearch> {
@@ -22,8 +21,14 @@ impl GradientDescent<ArmijoLineSearch> {
         GradientDescent {
             line_search: ArmijoLineSearch::new(0.5, 1.0, 0.5),
             gradient_tolerance: 1.0e-4,
-            max_iterations: None
+            max_iterations: None,
         }
+    }
+}
+
+impl Default for GradientDescent<ArmijoLineSearch> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -31,9 +36,9 @@ impl<T: LineSearch> GradientDescent<T> {
     /// Specifies the line search method to use.
     pub fn line_search<S: LineSearch>(self, line_search: S) -> GradientDescent<S> {
         GradientDescent {
-            line_search: line_search,
+            line_search,
             gradient_tolerance: self.gradient_tolerance,
-            max_iterations: self.max_iterations
+            max_iterations: self.max_iterations,
         }
     }
 
@@ -56,14 +61,15 @@ impl<T: LineSearch> GradientDescent<T> {
     }
 }
 
-impl<F: Function1, S: LineSearch> Minimizer<F> for GradientDescent<S>
-{
+impl<F: Function1, S: LineSearch> Minimizer<F> for GradientDescent<S> {
     type Solution = Solution;
 
     fn minimize(&self, function: &F, initial_position: Vec<f64>) -> Solution {
-        info!("Starting gradient descent minimization: gradient_tolerance = {:?},
+        info!(
+            "Starting gradient descent minimization: gradient_tolerance = {:?},
             max_iterations = {:?}, line_search = {:?}",
-            self.gradient_tolerance, self.max_iterations, self.line_search);
+            self.gradient_tolerance, self.max_iterations, self.line_search
+        );
 
         let mut position = initial_position;
         let mut value = function.value(&position);
@@ -95,13 +101,17 @@ impl<F: Function1, S: LineSearch> Minimizer<F> for GradientDescent<S>
             iteration += 1;
 
             if log_enabled!(Trace) {
-                debug!("Iteration {:6}: y = {:?}, x = {:?}", iteration, value, position);
+                debug!(
+                    "Iteration {:6}: y = {:?}, x = {:?}",
+                    iteration, value, position
+                );
             } else {
                 debug!("Iteration {:6}: y = {:?}", iteration, value);
             }
 
-            let reached_max_iterations = self.max_iterations.map_or(false,
-                    |max_iterations| iteration == max_iterations);
+            let reached_max_iterations = self
+                .max_iterations
+                .map_or(false, |max_iterations| iteration == max_iterations);
 
             if reached_max_iterations {
                 info!("Reached maximal number of iterations, stopping optimization");
@@ -112,14 +122,13 @@ impl<F: Function1, S: LineSearch> Minimizer<F> for GradientDescent<S>
     }
 }
 
-
 #[cfg(test)]
 mod tests {
-    use problems::{Sphere, Rosenbrock};
+    use problems::{Rosenbrock, Sphere};
 
     use super::GradientDescent;
 
     test_minimizer!{GradientDescent::new(),
-        sphere => Sphere::default(),
-        rosenbrock => Rosenbrock::default()}
+    sphere => Sphere::default(),
+    rosenbrock => Rosenbrock::default()}
 }

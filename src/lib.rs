@@ -27,30 +27,22 @@
 //! - **`StochasticGradientDescent`** - Iterative stochastic gradient descenent minimazation,
 //!   currently using a fixed step width
 
-
-#![cfg_attr(feature = "unstable", feature(plugin))]
-#![cfg_attr(feature = "unstable", plugin(clippy))]
-#![cfg_attr(feature = "unstable", plugin(herbie_lint))]
-
-
 #[macro_use]
 extern crate log;
 extern crate rand;
 
-
 #[macro_use]
 pub mod problems;
 
+mod gd;
+mod line_search;
+mod numeric;
+mod sgd;
 mod types;
 mod utils;
-mod numeric;
-mod line_search;
-mod gd;
-mod sgd;
 
-
-pub use types::{Function, Function1, Func, Minimizer, Evaluation, Summation, Summation1};
-pub use numeric::NumericalDifferentiation;
-pub use line_search::{LineSearch, FixedStepWidth, ExactLineSearch, ArmijoLineSearch};
 pub use gd::GradientDescent;
+pub use line_search::{ArmijoLineSearch, ExactLineSearch, FixedStepWidth, LineSearch};
+pub use numeric::NumericalDifferentiation;
 pub use sgd::StochasticGradientDescent;
+pub use types::{Evaluation, Func, Function, Function1, Minimizer, Summation, Summation1};

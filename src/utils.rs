@@ -1,13 +1,11 @@
 #[cfg(test)]
-use std::f64::{MIN_POSITIVE, MAX};
-
+use std::f64::{MAX, MIN_POSITIVE};
 
 /// Tests whether we reached a flat area, i.e., tests if all absolute gradient component
 /// lie within the `tolerance`.
 pub fn is_saddle_point(gradient: &[f64], tolerance: f64) -> bool {
     gradient.iter().all(|dx| dx.abs() <= tolerance)
 }
-
 
 /// Tests whether two floating point numbers are close using the relative error
 /// and handling special cases like infinity etc.
@@ -29,12 +27,11 @@ pub fn are_close(a: f64, b: f64, eps: f64) -> bool {
     || d / (a + b).min(MAX) < eps
 }
 
-
 #[cfg(test)]
 mod tests {
     use std::f64::{INFINITY, NAN};
 
-    use super::{is_saddle_point, are_close};
+    use super::{are_close, is_saddle_point};
 
     #[test]
     fn test_is_saddle_point() {

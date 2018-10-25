@@ -3,7 +3,6 @@ use std::f64::EPSILON;
 use problems::Problem;
 use types::{Function, Function1};
 
-
 /// Wraps a function for which to provide numeric differentiation.
 ///
 /// Uses simple one step forward finite difference with step width `h = √εx`.
@@ -21,16 +20,14 @@ use types::{Function, Function1};
 /// assert!(square.gradient(&[-1.0])[0] < 1.0);
 /// ```
 pub struct NumericalDifferentiation<F: Function> {
-    function: F
+    function: F,
 }
 
 impl<F: Function> NumericalDifferentiation<F> {
     /// Creates a new differentiable function by using the supplied `function` in
     /// combination with numeric differentiation to find the derivatives.
     pub fn new(function: F) -> Self {
-        NumericalDifferentiation {
-            function: function
-        }
+        NumericalDifferentiation { function }
     }
 }
 
@@ -42,31 +39,36 @@ impl<F: Function> Function for NumericalDifferentiation<F> {
 
 impl<F: Function> Function1 for NumericalDifferentiation<F> {
     fn gradient(&self, position: &[f64]) -> Vec<f64> {
-        let mut x: Vec<_> = position.iter().cloned().collect();
+        let mut x: Vec<_> = position.to_vec();
 
         let current = self.value(&x);
 
-        position.iter().cloned().enumerate().map(|(i, x_i)| {
-            let h = if x_i == 0.0 {
-                EPSILON * 1.0e10
-            } else {
-                (EPSILON * x_i.abs()).sqrt()
-            };
+        position
+            .iter()
+            .cloned()
+            .enumerate()
+            .map(|(i, x_i)| {
+                let h = if x_i == 0.0 {
+                    EPSILON * 1.0e10
+                } else {
+                    (EPSILON * x_i.abs()).sqrt()
+                };
 
-            assert!(h.is_finite());
+                assert!(h.is_finite());
 
-            x[i] = x_i + h;
+                x[i] = x_i + h;
 
-            let forward = self.function.value(&x);
+                let forward = self.function.value(&x);
 
-            x[i] = x_i;
+                x[i] = x_i;
 
-            let d_i = (forward - current) / h;
+                let d_i = (forward - current) / h;
 
-            assert!(d_i.is_finite());
+                assert!(d_i.is_finite());
 
-            d_i
-        }).collect()
+                d_i
+            })
+            .collect()
     }
 }
 
@@ -94,13 +96,12 @@ impl<F: Problem> Problem for NumericalDifferentiation<F> {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
-    use types::Function1;
-    use problems::{Problem, Sphere, Rosenbrock};
-    use utils::are_close;
     use gd::GradientDescent;
+    use problems::{Problem, Rosenbrock, Sphere};
+    use types::Function1;
+    use utils::are_close;
 
     use super::NumericalDifferentiation;
 
@@ -123,14 +124,15 @@ mod tests {
 
                 assert_eq!(analytical_gradient.len(), numerical_gradient.len());
 
-                assert!(analytical_gradient.into_iter().zip(numerical_gradient).all(|(a, n)|
-                    a.is_finite() && n.is_finite() && are_close(a, n, 1.0e-3)
-                ));
+                assert!(analytical_gradient
+                    .into_iter()
+                    .zip(numerical_gradient)
+                    .all(|(a, n)| a.is_finite() && n.is_finite() && are_close(a, n, 1.0e-3)));
             }
         }
     }
 
     test_minimizer!{GradientDescent::new(),
-        test_gd_sphere => NumericalDifferentiation::new(Sphere::default()),
-        test_gd_rosenbrock => NumericalDifferentiation::new(Rosenbrock::default())}
+    test_gd_sphere => NumericalDifferentiation::new(Sphere::default()),
+    test_gd_rosenbrock => NumericalDifferentiation::new(Rosenbrock::default())}
 }

@@ -18,7 +18,6 @@ use std::ops::Add;
 
 use types::{Function, Function1};
 
-
 /// Specifies a well known optimization problem.
 pub trait Problem: Function + Default {
     /// Returns the dimensionality of the input domain.
@@ -36,13 +35,13 @@ pub trait Problem: Function + Default {
 
     /// Tests whether the supplied position is legal for this function.
     fn is_legal_position(&self, position: &[f64]) -> bool {
-        position.len() == self.dimensions() &&
-        position.iter().zip(self.domain()).all(|(&x, (lower, upper))| {
-            lower < x && x < upper
-        })
+        position.len() == self.dimensions()
+            && position
+                .iter()
+                .zip(self.domain())
+                .all(|(&x, (lower, upper))| lower < x && x < upper)
     }
 }
-
 
 macro_rules! define_problem {
     ( $name:ident: $this:ident,
@@ -97,7 +96,6 @@ macro_rules! define_problem {
     };
 }
 
-
 /// n-dimensional Sphere function.
 ///
 /// It is continuous, convex and unimodal:
@@ -107,16 +105,14 @@ macro_rules! define_problem {
 /// *Global minimum*: `f(0,...,0) = 0`
 #[derive(Debug, Copy, Clone)]
 pub struct Sphere {
-    dimensions: usize
+    dimensions: usize,
 }
 
 impl Sphere {
     pub fn new(dimensions: usize) -> Sphere {
         assert!(dimensions > 0, "dimensions must be larger than 1");
 
-        Sphere {
-            dimensions: dimensions
-        }
+        Sphere { dimensions }
     }
 }
 
@@ -131,7 +127,6 @@ define_problem!{Sphere: self,
     gradient: x => x.iter().map(|x| 2.0 * x).collect()
 }
 
-
 /// Two-dimensional Rosenbrock function.
 ///
 /// A non-convex function with its global minimum inside a long, narrow, parabolic
@@ -143,17 +138,14 @@ define_problem!{Sphere: self,
 #[derive(Debug, Copy, Clone)]
 pub struct Rosenbrock {
     a: f64,
-    b: f64
+    b: f64,
 }
 
 impl Rosenbrock {
     /// Creates a new `Rosenbrock` function given `a` and `b`, commonly definied
     /// with 1 and 100, respectively, which also corresponds to the `default`.
     pub fn new(a: f64, b: f64) -> Rosenbrock {
-        Rosenbrock {
-            a: a,
-            b: b
-        }
+        Rosenbrock { a, b }
     }
 }
 
@@ -168,7 +160,6 @@ define_problem!{Rosenbrock: self,
     gradient: x => vec![-2.0 * self.a + 4.0 * self.b * x[0].powi(3) - 4.0 * self.b * x[0] * x[1] + 2.0 * x[0],
                         2.0 * self.b * (x[1] - x[0].powi(2))]
 }
-
 
 /*
 pub struct McCormick;
@@ -191,7 +182,6 @@ define_problem!{McCormick: self,
                         (x[0] + x[1]).cos() - 2.0 * (x[0] - x[1]) + 2.5]
 }
 */
-
 
 #[cfg(test)]
 macro_rules! test_minimizer {

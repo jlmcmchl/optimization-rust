@@ -1,15 +1,14 @@
-use log::LogLevel::Trace;
-use rand::{SeedableRng, Rng, XorShiftRng, random};
+use log::Level::Trace;
+use rand::{random, Rng, SeedableRng, XorShiftRng};
 
 use types::{Minimizer, Solution, Summation1};
-
 
 /// Provides _stochastic_ Gradient Descent optimization.
 pub struct StochasticGradientDescent {
     rng: XorShiftRng,
     max_iterations: Option<u64>,
     mini_batch: usize,
-    step_width: f64
+    step_width: f64,
 }
 
 impl StochasticGradientDescent {
@@ -25,7 +24,7 @@ impl StochasticGradientDescent {
             rng: random(),
             max_iterations: None,
             mini_batch: 1,
-            step_width: 0.01
+            step_width: 0.01,
         }
     }
 
@@ -60,6 +59,12 @@ impl StochasticGradientDescent {
 
         self.step_width = step_width;
         self
+    }
+}
+
+impl Default for StochasticGradientDescent {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -98,13 +103,17 @@ impl<F: Summation1> Minimizer<F> for StochasticGradientDescent {
             iteration += 1;
 
             if log_enabled!(Trace) {
-                debug!("Iteration {:6}: y = {:?}, x = {:?}", iteration, value, position);
+                debug!(
+                    "Iteration {:6}: y = {:?}, x = {:?}",
+                    iteration, value, position
+                );
             } else {
                 debug!("Iteration {:6}: y = {:?}", iteration, value);
             }
 
-            let reached_max_iterations = self.max_iterations.map_or(false,
-                |max_iterations| iteration == max_iterations);
+            let reached_max_iterations = self
+                .max_iterations
+                .map_or(false, |max_iterations| iteration == max_iterations);
 
             if reached_max_iterations {
                 info!("Reached maximal number of iterations, stopping optimization");
